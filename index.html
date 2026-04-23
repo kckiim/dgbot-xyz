@@ -5,536 +5,258 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>YouTube Niche Research — dgbot.xyz</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0a0a; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 2rem; }
-    .header { margin-bottom: 2.5rem; }
-    .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
-    .header h1 span { color: #ff0000; }
-    .header p { color: #6b7280; margin-top: 0.5rem; font-size: 0.875rem; }
-    .stats-row { display: flex; gap: 1rem; margin-bottom: 2.5rem; flex-wrap: wrap; }
-    .stat-card { background: #111; border: 1px solid #1f2937; border-radius: 12px; padding: 1rem 1.5rem; min-width: 140px; }
-    .stat-card .val { font-size: 1.5rem; font-weight: 700; color: #fff; }
-    .stat-card .lbl { font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; }
-    .niche-section { margin-bottom: 2.5rem; }
-    .niche-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: #111; border-radius: 8px; margin-bottom: 1rem; }
-    .niche-header h2 { font-size: 1rem; font-weight: 600; }
-    .niche-count { font-size: 0.75rem; color: #6b7280; background: #1f2937; padding: 0.2rem 0.6rem; border-radius: 999px; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-    thead tr { background: #111; }
-    th { padding: 0.75rem 1rem; text-align: left; color: #6b7280; font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #1f2937; white-space: nowrap; }
-    td { padding: 0.75rem 1rem; border-bottom: 1px solid #111827; vertical-align: middle; }
-    tr:hover td { background: #111; }
-    .ch-link { color: #e5e7eb; text-decoration: none; font-weight: 500; }
-    .ch-link:hover { color: #3b82f6; }
-    .highlight { color: #10b981; font-weight: 600; }
-    .badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 999px; white-space: nowrap; }
-    .badge.hot { background: #7f1d1d; color: #fca5a5; }
-    .badge.scale { background: #064e3b; color: #6ee7b7; }
-    .badge.new { background: #1e1b4b; color: #a5b4fc; }
-    .footer { margin-top: 3rem; color: #374151; font-size: 0.75rem; text-align: center; }
-    @media (max-width: 640px) { body { padding: 1rem; } .stats-row { gap: 0.5rem; } }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0a0a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2rem;max-width:1400px;margin:0 auto}
+    .header{margin-bottom:2rem}
+    .header h1{font-size:2rem;font-weight:800;letter-spacing:-0.03em}
+    .header h1 span{color:#ff0000}
+    .header p{color:#6b7280;margin-top:.4rem;font-size:.85rem}
+    .stats-row{display:flex;gap:1rem;margin-bottom:2.5rem;flex-wrap:wrap}
+    .stat{background:#111;border:1px solid #1f2937;border-radius:12px;padding:1rem 1.5rem;min-width:150px}
+    .stat .val{font-size:1.6rem;font-weight:800;color:#fff}
+    .stat .lbl{font-size:.75rem;color:#6b7280;margin-top:.2rem;text-transform:uppercase;letter-spacing:.05em}
+    .insight{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:2.5rem}
+    .insight h3{font-size:.85rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}
+    .insight ul{list-style:none;display:flex;flex-wrap:wrap;gap:.5rem}
+    .insight li{background:#1f2937;padding:.4rem .9rem;border-radius:999px;font-size:.8rem;color:#e5e7eb}
+    .niche-section{margin-bottom:2.5rem}
+    .niche-header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;margin-bottom:.75rem}
+    .niche-header h2{font-size:1rem;font-weight:700}
+    .niche-count{font-size:.75rem;color:#6b7280;background:#1f2937;padding:.2rem .6rem;border-radius:999px}
+    .table-wrap{overflow-x:auto;border:1px solid #1f2937;border-radius:12px}
+    table{width:100%;border-collapse:collapse;font-size:.85rem}
+    th{padding:.7rem 1rem;text-align:left;color:#6b7280;font-weight:500;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #1f2937;background:#0d0d0d;white-space:nowrap}
+    td{padding:.75rem 1rem;border-bottom:1px solid #111827}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#0f0f0f}
+    .rank{color:#374151;font-size:.8rem}
+    .ch-link{color:#e5e7eb;text-decoration:none;font-weight:600}
+    .ch-link:hover{color:#3b82f6;text-decoration:underline}
+    .highlight{color:#10b981;font-weight:700}
+    .age{color:#9ca3af;font-size:.8rem}
+    .badge{font-size:.7rem;padding:.2rem .55rem;border-radius:999px;white-space:nowrap;font-weight:600}
+    .badge.hot{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d}
+    .badge.scale{background:#052e16;color:#86efac;border:1px solid #14532d}
+    .badge.new{background:#1e1b4b;color:#a5b4fc;border:1px solid #312e81}
+    .badge.neutral{color:#4b5563}
+    .footer{margin-top:3rem;color:#374151;font-size:.75rem;text-align:center;padding-top:1.5rem;border-top:1px solid #111}
   </style>
 </head>
 <body>
   <div class="header">
     <h1>📺 YouTube <span>Niche</span> Research</h1>
-    <p>Generated April 22, 2026 · 36 channels across 5 niches · Data via YouTube API v3</p>
+    <p>Channels under 18 months old · Generated April 22, 2026 · YouTube Data API v3</p>
   </div>
 
   <div class="stats-row">
-    <div class="stat-card"><div class="val">36</div><div class="lbl">Channels Tracked</div></div>
-    <div class="stat-card"><div class="val">5</div><div class="lbl">Niches Covered</div></div>
-    <div class="stat-card"><div class="val">2.9M</div><div class="lbl">Top Monthly Views</div></div>
-    <div class="stat-card"><div class="val">1</div><div class="lbl">New + Growing</div></div>
+    <div class="stat"><div class="val">11</div><div class="lbl">Channels</div></div>
+    <div class="stat"><div class="val">4</div><div class="lbl">Niches</div></div>
+    <div class="stat"><div class="val">22.8M</div><div class="lbl">Top Monthly Views</div></div>
+    <div class="stat"><div class="val" style="color:#8b5cf6">Sleep</div><div class="lbl">Hottest Niche</div></div>
+  </div>
+
+  <div class="insight">
+    <h3>💡 Key Signals</h3>
+    <ul>
+      <li>🟣 Sleep & Relaxation dominates — 6 of top 10 channels, all under 18mo</li>
+      <li>💤 Long-form sleep content (1h+) = high watch time = high RPM</li>
+      <li>🤖 Faceless Automation: growing but noisy — need original angle</li>
+      <li>💰 Personal Finance: competitive but evergreen — Nick Invests pulling 941K/mo in under 14mo</li>
+      <li>🧠 AI/Productivity: low view counts on new channels — oversaturated entry, hard to break through</li>
+    </ul>
   </div>
 
   
     <div class="niche-section">
-      <div class="niche-header" style="border-left: 4px solid #3b82f6">
-        <h2>Productivity & AI</h2>
-        <span class="niche-count">8 channels</span>
+      <div class="niche-header" style="border-left: 4px solid #8b5cf6; padding-left: 1rem;">
+        <h2 style="color:#8b5cf6">Sleep & Relaxation</h2>
+        <span class="niche-count">6 channels</span>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
+              <th>#</th>
               <th>Channel</th>
               <th>Subscribers</th>
-              <th>Monthly Views</th>
+              <th>Est. Monthly Views</th>
               <th>Avg Views/Video</th>
               <th>Avg Duration</th>
-              <th>Channel Age</th>
+              <th>Age</th>
               <th>Signal</th>
             </tr>
           </thead>
           <tbody>
-    
             <tr>
-              <td><a href="https://youtube.com/channel/UCifAOlFCds0WZgLpUpEEcrg" target="_blank" class="ch-link">AIProductivityPro</a></td>
-              <td>2</td>
-              <td class="highlight">562</td>
-              <td>186</td>
-              <td>0m 43s</td>
-              <td>7mo old</td>
-              <td></td>
+              <td class="rank">#1</td>
+              <td><a href="https://youtube.com/channel/UCBJy6kYnYJhVykFtnh6PvMg" target="_blank" class="ch-link">Vedicyoga Hindi</a></td>
+              <td>351K</td>
+              <td class="highlight">22.8M</td>
+              <td>13K</td>
+              <td>2m 24s</td>
+              <td class="age">1y 1mo</td>
+              <td><span class="badge scale">📈 Established</span></td>
             </tr>
-        
             <tr>
-              <td><a href="https://youtube.com/channel/UCz-NTss7J6e7j1v7m5m5_Aw" target="_blank" class="ch-link">AI Learning Planet </a></td>
-              <td>5</td>
-              <td class="highlight">435</td>
-              <td>220</td>
-              <td>0m 51s</td>
-              <td>4mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCBSCF862qC6TamQiczxEYzA" target="_blank" class="ch-link">AI Toolkit Pro</a></td>
-              <td>30</td>
-              <td class="highlight">251</td>
-              <td>442</td>
-              <td>7m 28s</td>
-              <td>11mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC-RHpwoSqowdrLP2uKB_QAA" target="_blank" class="ch-link">NextGen Tools</a></td>
-              <td>3</td>
-              <td class="highlight">53</td>
-              <td>211</td>
-              <td>1m 43s</td>
-              <td>7mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCAkgIM2dLt8zzfBm-nCZrgg" target="_blank" class="ch-link">AI Productivity</a></td>
-              <td>3</td>
-              <td class="highlight">36</td>
-              <td>31</td>
-              <td>6m 28s</td>
-              <td>4mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCeNSZyV33iMx_ADAztE4v7w" target="_blank" class="ch-link"> AI Simplified</a></td>
-              <td>55</td>
-              <td class="highlight">0</td>
-              <td>0</td>
-              <td>N/A</td>
-              <td>1y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCANJud5iDwQh3kH9PrXIPdw" target="_blank" class="ch-link">Smart Ai Hub</a></td>
-              <td>0</td>
-              <td class="highlight">0</td>
-              <td>1</td>
-              <td>0m 38s</td>
-              <td>8mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCyMqiCayWqu6Tqf0luCHIRA" target="_blank" class="ch-link">MicroLearn AI </a></td>
-              <td>0</td>
-              <td class="highlight">0</td>
-              <td>1</td>
-              <td>4m 46s</td>
-              <td>4mo old</td>
-              <td></td>
-            </tr>
-        
-          </tbody>
-        </table>
-      </div>
-    </div>
-    
-    <div class="niche-section">
-      <div class="niche-header" style="border-left: 4px solid #10b981">
-        <h2>Personal Finance</h2>
-        <span class="niche-count">8 channels</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Channel</th>
-              <th>Subscribers</th>
-              <th>Monthly Views</th>
-              <th>Avg Views/Video</th>
-              <th>Avg Duration</th>
-              <th>Channel Age</th>
-              <th>Signal</th>
-            </tr>
-          </thead>
-          <tbody>
-    
-            <tr>
-              <td><a href="https://youtube.com/channel/UCFBpVaKCC0ajGps1vf0AgBg" target="_blank" class="ch-link">Humphrey Yang</a></td>
-              <td>2.0M</td>
-              <td class="highlight">2.9M</td>
-              <td>165K</td>
-              <td>3m 41s</td>
-              <td>15y old</td>
-              <td><span class="badge scale">📈 Scale</span></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCkVVcie6Lfh98YJ3QknetJQ" target="_blank" class="ch-link">Money School  | Personal Finance /Beginners </a></td>
-              <td>65</td>
-              <td class="highlight">10K</td>
-              <td>593</td>
-              <td>0m 28s</td>
-              <td>2mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCcbQA0VYLgcELXgwTopAP0g" target="_blank" class="ch-link">Assetly Academy</a></td>
-              <td>54</td>
-              <td class="highlight">341</td>
-              <td>308</td>
-              <td>4m 20s</td>
-              <td>5mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCaP_aI6IAMoEtzYKWJIzY0g" target="_blank" class="ch-link">Finance Simplified </a></td>
-              <td>4</td>
-              <td class="highlight">75</td>
-              <td>256</td>
-              <td>0m 28s</td>
-              <td>3y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCzGYghLLXY5hwgvZkjzKlKg" target="_blank" class="ch-link"> FD Wealthwise Hub</a></td>
-              <td>141</td>
-              <td class="highlight">43</td>
-              <td>31</td>
-              <td>10m 20s</td>
-              <td>4y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCfPZAHVbvMOp0rPLE6WoZvw" target="_blank" class="ch-link">Invest with Alex</a></td>
-              <td>4</td>
-              <td class="highlight">11</td>
-              <td>9</td>
-              <td>5m 23s</td>
-              <td>1y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC1xDnFH0vqQt5CftWckT1dQ" target="_blank" class="ch-link">Beginners rich</a></td>
-              <td>1</td>
-              <td class="highlight">1</td>
-              <td>1</td>
-              <td>0m 36s</td>
-              <td>1y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCb8riWI3KAgtMLaHDedG6Qw" target="_blank" class="ch-link">THE BEGINNER INVESTOR </a></td>
-              <td>0</td>
-              <td class="highlight">0</td>
-              <td>10</td>
-              <td>10m 11s</td>
-              <td>2y old</td>
-              <td></td>
-            </tr>
-        
-          </tbody>
-        </table>
-      </div>
-    </div>
-    
-    <div class="niche-section">
-      <div class="niche-header" style="border-left: 4px solid #8b5cf6">
-        <h2>Sleep & Relaxation</h2>
-        <span class="niche-count">4 channels</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Channel</th>
-              <th>Subscribers</th>
-              <th>Monthly Views</th>
-              <th>Avg Views/Video</th>
-              <th>Avg Duration</th>
-              <th>Channel Age</th>
-              <th>Signal</th>
-            </tr>
-          </thead>
-          <tbody>
-    
-            <tr>
-              <td><a href="https://youtube.com/channel/UCKM1QfBcz8rH0Z9lt5EcFQQ" target="_blank" class="ch-link">Sueños Dulces Bebés 🌙 | Baby Sleep Sounds</a></td>
-              <td>5</td>
-              <td class="highlight">1K</td>
-              <td>44</td>
-              <td>47m 44s</td>
-              <td>3mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC0TUYlxanLX1tnB7xjtStBA" target="_blank" class="ch-link">Sleep Music with Nature Sounds Relaxation - Topic</a></td>
-              <td>14</td>
-              <td class="highlight">558</td>
-              <td>6</td>
-              <td>1m 41s</td>
-              <td>7y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCUL6IUFI0pDaZ48WzSRjHjw" target="_blank" class="ch-link">Relaxation Sounds for the mind and soul</a></td>
-              <td>21</td>
-              <td class="highlight">59</td>
-              <td>483</td>
-              <td>1h 12m</td>
-              <td>4y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCOswo8LOsasUWnvp5PYB8vg" target="_blank" class="ch-link">Relaxing Sounds</a></td>
-              <td>5</td>
-              <td class="highlight">7</td>
-              <td>12</td>
-              <td>2h 20m</td>
-              <td>8y old</td>
-              <td></td>
-            </tr>
-        
-          </tbody>
-        </table>
-      </div>
-    </div>
-    
-    <div class="niche-section">
-      <div class="niche-header" style="border-left: 4px solid #f59e0b">
-        <h2>Faceless Automation</h2>
-        <span class="niche-count">8 channels</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Channel</th>
-              <th>Subscribers</th>
-              <th>Monthly Views</th>
-              <th>Avg Views/Video</th>
-              <th>Avg Duration</th>
-              <th>Channel Age</th>
-              <th>Signal</th>
-            </tr>
-          </thead>
-          <tbody>
-    
-            <tr>
-              <td><a href="https://youtube.com/channel/UCkOza0p_OH1Ef6HYEJXDS3g" target="_blank" class="ch-link">Youtube Automation Bangla </a></td>
-              <td>26K</td>
-              <td class="highlight">63K</td>
-              <td>318</td>
-              <td>9m 30s</td>
-              <td>2y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCDsfcD7joruYdKcowqi7-fg" target="_blank" class="ch-link">Faceless Vault</a></td>
-              <td>343</td>
-              <td class="highlight">28K</td>
-              <td>2K</td>
-              <td>0m 11s</td>
-              <td>11mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC9uiJVTk7_7riSqUsQ4QmYg" target="_blank" class="ch-link">Faceless.tech&tools</a></td>
-              <td>42</td>
-              <td class="highlight">3K</td>
-              <td>1K</td>
-              <td>0m 40s</td>
-              <td>2mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCHOqUwU_QiiL9uzdAE4arHg" target="_blank" class="ch-link">AI Side Hustle Academy</a></td>
-              <td>1K</td>
-              <td class="highlight">3K</td>
-              <td>21</td>
-              <td>5m 41s</td>
-              <td>5mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCwc4EmhTyl_YHO3vg9LL_pQ" target="_blank" class="ch-link">AI income</a></td>
-              <td>46</td>
-              <td class="highlight">910</td>
-              <td>179</td>
-              <td>3m 53s</td>
-              <td>11mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC88p1a8n1XUEdbF_PjrdN1g" target="_blank" class="ch-link">Wealth Grid</a></td>
-              <td>39</td>
-              <td class="highlight">215</td>
-              <td>54</td>
-              <td>4m 39s</td>
-              <td>1y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCd2lG-VYCh-JJFZIoZtY_YQ" target="_blank" class="ch-link">Kessy Effiom</a></td>
-              <td>9</td>
-              <td class="highlight">146</td>
-              <td>579</td>
-              <td>2m 13s</td>
-              <td>3y old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC-Qs0x37K8ssFsAcxMTeG4w" target="_blank" class="ch-link">DFY Faceless Income</a></td>
-              <td>17</td>
-              <td class="highlight">37</td>
+              <td class="rank">#2</td>
+              <td><a href="https://youtube.com/channel/UCG-P7MpCebyIHTo1DpwQkeQ" target="_blank" class="ch-link">77 Bird </a></td>
+              <td>34K</td>
+              <td class="highlight">2.7M</td>
               <td>80</td>
-              <td>3m 37s</td>
-              <td>1y old</td>
-              <td></td>
+              <td>17m 23s</td>
+              <td class="age">6mo</td>
+              <td><span class="badge scale">📈 Scaling</span></td>
             </tr>
-        
-          </tbody>
-        </table>
-      </div>
-    </div>
-    
+            <tr>
+              <td class="rank">#3</td>
+              <td><a href="https://youtube.com/channel/UCK47hqYsdzik7C92lvIdXgg" target="_blank" class="ch-link">ASMR Mushi </a></td>
+              <td>21K</td>
+              <td class="highlight">874K</td>
+              <td>4K</td>
+              <td>9m 3s</td>
+              <td class="age">1y 2mo</td>
+              <td><span class="badge scale">📈 Established</span></td>
+            </tr>
+            <tr>
+              <td class="rank">#4</td>
+              <td><a href="https://youtube.com/channel/UCR_TGH4h2VTCEge1h3eID_A" target="_blank" class="ch-link">Dreamland Friends</a></td>
+              <td>26K</td>
+              <td class="highlight">713K</td>
+              <td>1K</td>
+              <td>7h 31m</td>
+              <td class="age">1y 1mo</td>
+              <td><span class="badge scale">📈 Established</span></td>
+            </tr>
+            <tr>
+              <td class="rank">#5</td>
+              <td><a href="https://youtube.com/channel/UCUM-mjKC5M4fTkPP6O9h2oQ" target="_blank" class="ch-link">Sound Charm</a></td>
+              <td>12K</td>
+              <td class="highlight">208K</td>
+              <td>5K</td>
+              <td>4h 1m</td>
+              <td class="age">11mo</td>
+              <td><span class="badge new">✨ Growing</span></td>
+            </tr>
+            <tr>
+              <td class="rank">#6</td>
+              <td><a href="https://youtube.com/channel/UCw4Nc30a5KG3ree472atfOw" target="_blank" class="ch-link">Peaceful Psalms - Sleep Music</a></td>
+              <td>19K</td>
+              <td class="highlight">192K</td>
+              <td>2K</td>
+              <td>3h 14m</td>
+              <td class="age">1y 1mo</td>
+              <td><span class="badge neutral">—</span></td>
+            </tr></tbody></table></div></div>
     <div class="niche-section">
-      <div class="niche-header" style="border-left: 4px solid #ef4444">
-        <h2>Stoicism & Mindset</h2>
-        <span class="niche-count">8 channels</span>
+      <div class="niche-header" style="border-left: 4px solid #10b981; padding-left: 1rem;">
+        <h2 style="color:#10b981">Personal Finance</h2>
+        <span class="niche-count">1 channels</span>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
+              <th>#</th>
               <th>Channel</th>
               <th>Subscribers</th>
-              <th>Monthly Views</th>
+              <th>Est. Monthly Views</th>
               <th>Avg Views/Video</th>
               <th>Avg Duration</th>
-              <th>Channel Age</th>
+              <th>Age</th>
               <th>Signal</th>
             </tr>
           </thead>
           <tbody>
-    
             <tr>
-              <td><a href="https://youtube.com/channel/UCW6oyAppcr8r12vYhflrV2w" target="_blank" class="ch-link">Stoic Authority</a></td>
-              <td>1K</td>
-              <td class="highlight">120K</td>
-              <td>2K</td>
-              <td>0m 49s</td>
-              <td>22d old</td>
-              <td><span class="badge new">✨ New</span></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC7q6ygAEkXkVj-vrYzFVJyg" target="_blank" class="ch-link">The Stoic Path</a></td>
-              <td>452</td>
-              <td class="highlight">21K</td>
-              <td>798</td>
-              <td>0m 48s</td>
-              <td>2mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCaiLCtbmx4vwBzkqjFoLNoQ" target="_blank" class="ch-link">Stoic / Philosophical</a></td>
-              <td>32</td>
-              <td class="highlight">18K</td>
-              <td>860</td>
-              <td>0m 40s</td>
-              <td>1mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UC_pwk7cpApKJJV7rbLozKnw" target="_blank" class="ch-link">Built by Stoicism</a></td>
-              <td>27</td>
-              <td class="highlight">493</td>
-              <td>37</td>
-              <td>36m 54s</td>
-              <td>3mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCRn_Y18o1HKZN_1Cje6DSug" target="_blank" class="ch-link">The Modern Stoic Mind</a></td>
-              <td>14</td>
-              <td class="highlight">308</td>
-              <td>623</td>
-              <td>2m 12s</td>
-              <td>6mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCJ03gn-tH5pzGQyccRvorcw" target="_blank" class="ch-link">Psychology Stoic </a></td>
-              <td>3</td>
-              <td class="highlight">46</td>
-              <td>11</td>
-              <td>10m 20s</td>
-              <td>2mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCGfqpZjzZBDjydo0mgV5m6Q" target="_blank" class="ch-link">The Stoic Mindset</a></td>
-              <td>1</td>
-              <td class="highlight">22</td>
-              <td>127</td>
-              <td>0m 15s</td>
-              <td>11mo old</td>
-              <td></td>
-            </tr>
-        
-            <tr>
-              <td><a href="https://youtube.com/channel/UCmtC4ZJASAQKpo_x0k05XzA" target="_blank" class="ch-link">The Stoic Aspirant</a></td>
-              <td>10</td>
-              <td class="highlight">0</td>
-              <td>47</td>
-              <td>35m 14s</td>
-              <td>12y old</td>
-              <td></td>
-            </tr>
-        
-          </tbody>
-        </table>
+              <td class="rank">#1</td>
+              <td><a href="https://youtube.com/channel/UCXzNNA2ngRpRiWvyA7eGd6w" target="_blank" class="ch-link">Nick Invests</a></td>
+              <td>169K</td>
+              <td class="highlight">942K</td>
+              <td>12K</td>
+              <td>20m 49s</td>
+              <td class="age">1y 3mo</td>
+              <td><span class="badge scale">📈 Established</span></td>
+            </tr></tbody></table></div></div>
+    <div class="niche-section">
+      <div class="niche-header" style="border-left: 4px solid #f59e0b; padding-left: 1rem;">
+        <h2 style="color:#f59e0b">Faceless Automation</h2>
+        <span class="niche-count">2 channels</span>
       </div>
-    </div>
-    
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Channel</th>
+              <th>Subscribers</th>
+              <th>Est. Monthly Views</th>
+              <th>Avg Views/Video</th>
+              <th>Avg Duration</th>
+              <th>Age</th>
+              <th>Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="rank">#1</td>
+              <td><a href="https://youtube.com/channel/UCzbtTRrbouQOKLGLwOxQegg" target="_blank" class="ch-link">Mr How</a></td>
+              <td>232K</td>
+              <td class="highlight">806K</td>
+              <td>84K</td>
+              <td>8m 28s</td>
+              <td class="age">10mo</td>
+              <td><span class="badge new">✨ Growing</span></td>
+            </tr>
+            <tr>
+              <td class="rank">#2</td>
+              <td><a href="https://youtube.com/channel/UCEJB0mYONqJmoIcVwasP-WA" target="_blank" class="ch-link">Sheeza Rana</a></td>
+              <td>44K</td>
+              <td class="highlight">290K</td>
+              <td>19K</td>
+              <td>9m 46s</td>
+              <td class="age">6mo</td>
+              <td><span class="badge new">✨ Growing</span></td>
+            </tr></tbody></table></div></div>
+    <div class="niche-section">
+      <div class="niche-header" style="border-left: 4px solid #3b82f6; padding-left: 1rem;">
+        <h2 style="color:#3b82f6">Productivity & AI</h2>
+        <span class="niche-count">2 channels</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Channel</th>
+              <th>Subscribers</th>
+              <th>Est. Monthly Views</th>
+              <th>Avg Views/Video</th>
+              <th>Avg Duration</th>
+              <th>Age</th>
+              <th>Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="rank">#1</td>
+              <td><a href="https://youtube.com/channel/UCjK8uEygRfIMcbWD3FfX6hg" target="_blank" class="ch-link">promptpocket for student</a></td>
+              <td>43</td>
+              <td class="highlight">6K</td>
+              <td>11</td>
+              <td>0m 8s</td>
+              <td class="age">6mo</td>
+              <td><span class="badge neutral">—</span></td>
+            </tr>
+            <tr>
+              <td class="rank">#2</td>
+              <td><a href="https://youtube.com/channel/UC6u7GxAOrVnpF6X5u8zvpBg" target="_blank" class="ch-link">The Ema Spry</a></td>
+              <td>797</td>
+              <td class="highlight">5K</td>
+              <td>288</td>
+              <td>1m 5s</td>
+              <td class="age">1y 4mo</td>
+              <td><span class="badge neutral">—</span></td>
+            </tr></tbody></table></div></div>
 
   <div class="footer">dgbot.xyz · Built by K.T. Infinity · 2026</div>
 </body>
