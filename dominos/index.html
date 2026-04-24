@@ -516,16 +516,10 @@ function handleHandClick(idx){
   const t=state.hands[0][idx];
   const le=state.leftEnd,re=state.rightEnd;
   if(le===null){
-    // Board is empty — play directly, no second click needed
-    playTile(0,idx,'left');
-    state.selected=null;
-    state.msg='Tile played!';
-    if(!state.gameOver){
-      state.turn=1;
-      render();
-      setTimeout(aiTurns,750);
-    }
-    return;
+    // Board is empty — select tile, prompt to click the board
+    state.selected=idx;
+    state.msg=`[${t[0]}|${t[1]}] selected — click the board to place it.`;
+    render();return;
   }
   const canL=tileMatchesEnd(t,le),canR=tileMatchesEnd(t,re);
   if(!canL&&!canR){
@@ -664,10 +658,26 @@ function renderBoard(){
     const h=140;
     svg.setAttribute('viewBox',`0 0 ${wrapW} ${h}`);
     svg.style.height=h+'px';
+    const hasSelected=state.selected!==null&&state.turn===0&&!state.gameOver;
+    // Clickable area when a tile is selected
+    if(hasSelected){
+      const hitArea=svgEl('rect',{x:0,y:0,width:wrapW,height:h,fill:'rgba(45,255,140,0.05)',
+        stroke:'#2dff8c','stroke-width':'2','stroke-dasharray':'8 4',rx:8,cursor:'pointer'});
+      hitArea.style.animation='boardPulse 1.5s ease-in-out infinite';
+      hitArea.addEventListener('click',()=>{
+        const idx=state.selected;
+        playTile(0,idx,'left');
+        state.selected=null;
+        state.msg='Tile played!';
+        if(!state.gameOver){state.turn=1;render();setTimeout(aiTurns,750);}
+      });
+      svg.appendChild(hitArea);
+    }
     const t=svgEl('text',{x:wrapW/2,y:h/2,'text-anchor':'middle',
-      'dominant-baseline':'middle',fill:'#4a6655',
+      'dominant-baseline':'middle',
+      fill:hasSelected?'#2dff8c':'#4a6655',
       'font-family':'DM Mono,monospace','font-size':'14'});
-    t.textContent='Waiting for first tile…';
+    t.textContent=hasSelected?'Click here to place your tile':'Waiting for first tile…';
     svg.appendChild(t);
     return;
   }
