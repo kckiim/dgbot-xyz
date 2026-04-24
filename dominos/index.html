@@ -364,13 +364,36 @@ function newGame(){
   document.getElementById('end-overlay').classList.remove('show');
   const deck=shuffle(allDominoes());
   const prev=(state&&state.totalScores)||[0,0,0,0];
+  const prevWinner=(state&&state.lastWinner!=null)?state.lastWinner:null;
   state={
     hands:[deck.slice(0,7),deck.slice(7,14),deck.slice(14,21),deck.slice(21,28)],
     boneyard:deck.slice(28),
     chain:[],leftEnd:null,rightEnd:null,
-    turn:0,totalScores:prev,
-    selected:null,msg:'Finding the highest double…',passed:0,gameOver:false
+    turn:0,totalScores:prev,lastWinner:null,
+    selected:null,msg:'',passed:0,gameOver:false
   };
+
+  // If there's a previous round winner, they lead with any tile they choose
+  if(prevWinner!==null){
+    state.turn=prevWinner;
+    state.msg=`${PLAYERS[prevWinner]} won last round — they lead first.${prevWinner===0?' Pick any tile from your hand!':''}`;
+    render();
+    if(prevWinner!==0){
+      // AI winner picks best tile to open
+      const t=state.hands[prevWinner].reduce((best,cur)=>cur[0]+cur[1]>best[0]+best[1]?cur:best);
+      const oi=state.hands[prevWinner].findIndex(x=>x[0]===t[0]&&x[1]===t[1]);
+      state.hands[prevWinner].splice(oi,1);
+      state.chain.push({a:t[0],b:t[1]});
+      state.leftEnd=t[0];state.rightEnd=t[1];
+      state.turn=(prevWinner+1)%4;
+      state.msg=`${PLAYERS[prevWinner]} led with [${t[0]}|${t[1]}].${state.turn===0?' Your turn!':''}`;
+      render();
+      if(state.turn!==0)setTimeout(aiTurns,900);
+    }
+    return;
+  }
+
+  // First game: find highest double to determine opener
   let fp=-1,ft=null;
   for(let d=6;d>=0;d--){
     for(let p=0;p<4;p++){
@@ -431,6 +454,7 @@ function playTile(player,tileIdx,end){
 
 function endRound(winner){
   state.gameOver=true;
+  state.lastWinner=winner;
   let total=0;
   for(let p=0;p<4;p++) if(p!==winner) total+=state.hands[p].reduce((s,t)=>s+t[0]+t[1],0);
   state.totalScores[winner]+=total;
@@ -445,6 +469,7 @@ function blockedGame(){
   const totals=state.hands.map(h=>h.reduce((s,t)=>s+t[0]+t[1],0));
   const min=Math.min(...totals);
   const winner=totals.indexOf(min);
+  state.lastWinner=winner;
   render();
   document.getElementById('end-title').textContent=winner===0?'You Win! (Blocked)':`${PLAYERS[winner]} Wins`;
   document.getElementById('end-pts').textContent=`Blocked · Lowest hand: ${min} pips`;
