@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caribbean Dominoes — dgbot.xyz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e0d; --surface:#111714; --surface2:#1a2019;
+    --border:rgba(45,255,140,0.15); --border2:rgba(45,255,140,0.35);
+    --accent:#2dff8c; --accent-dim:#1d9e57; --accent-dark:#0a3d20;
+    --text:#e8f5ee; --text2:#7fa890; --text3:#4a6655;
+    --tile-bg:#1e2820; --tile-border:rgba(45,255,140,0.3); --pip:#e8f5ee;
+    /* Tile size tokens — override on mobile */
+    --tile-w:52px; --tile-h:104px; --pip-sz:36px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;
+    min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(45,255,140,0.03)1px,transparent 1px),
+      linear-gradient(90deg,rgba(45,255,140,0.03)1px,transparent 1px);
+    background-size:32px 32px;pointer-events:none;z-index:0;}
+
+  #app{position:relative;z-index:1;max-width:960px;margin:0 auto;
+    padding:12px;min-height:100vh;display:flex;flex-direction:column;gap:8px;}
+
+  /* ── Header ── */
+  header{display:flex;align-items:baseline;justify-content:space-between;
+    padding-bottom:8px;border-bottom:1px solid var(--border);}
+  header h1{font-size:20px;font-weight:800;letter-spacing:-0.5px;color:var(--accent);}
+  header span{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:1px;}
+
+  /* ── Scoreboard ── */
+  #scoreboard{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .score-card{background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;padding:8px 6px;text-align:center;
+    transition:border-color .2s,background .2s;}
+  .score-card.active{border-color:var(--accent);background:var(--accent-dark);}
+  .score-card.active .score-name{color:var(--accent);}
+  .score-name{font-size:9px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--text3);margin-bottom:3px;font-family:'DM Mono',monospace;}
+  .score-val{font-size:20px;font-weight:800;color:var(--text);}
+  .score-turn{font-size:8px;color:var(--accent);font-family:'DM Mono',monospace;
+    margin-top:2px;min-height:11px;}
+  .score-bones{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;
+    margin-top:2px;letter-spacing:1px;}
+
+  /* ── Board ── */
+  #board-area{background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;padding:10px;position:relative;}
+  #board-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  #board-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;
+    color:var(--text3);text-transform:uppercase;}
+  #ends-hint{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);}
+  #board-svg-wrap{width:100%;overflow:hidden;border-radius:6px;}
+  #board-svg{display:block;width:100%;transition:height .3s ease;}
+  #boneyard-info{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);
+    text-align:right;padding-top:5px;}
+
+  /* ── Hand ── */
+  #hand-area{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;}
+  #hand-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;
+    color:var(--text3);text-transform:uppercase;margin-bottom:8px;}
+  #hand{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;
+    padding-bottom:6px;align-items:flex-end;
+    /* smooth momentum scroll on iOS */
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;}
+  #hand::-webkit-scrollbar{display:none;}
+
+  /* ── Hand domino tiles ── */
+  .domino{display:inline-flex;flex-direction:column;align-items:center;
+    justify-content:space-around;
+    width:var(--tile-w);height:var(--tile-h);
+    background:var(--tile-bg);border:2px solid var(--tile-border);
+    border-radius:8px;cursor:pointer;flex-shrink:0;position:relative;
+    transition:transform .12s,border-color .12s,background .12s,box-shadow .12s;
+    touch-action:manipulation;}
+  .domino:active:not(.unplayable){transform:translateY(-6px);
+    border-color:var(--accent);background:#1e2e22;}
+  /* hover only on non-touch */
+  @media(hover:hover){
+    .domino:hover:not(.unplayable){transform:translateY(-6px);
+      border-color:var(--accent);background:#1e2e22;}
+  }
+  .domino.selected{border-color:var(--accent)!important;background:#1a3022!important;
+    transform:translateY(-10px);box-shadow:0 8px 24px rgba(45,255,140,0.3);}
+  .domino.unplayable{opacity:0.35;cursor:default;}
+  .domino .half{width:100%;flex:1;display:flex;align-items:center;justify-content:center;}
+  .domino .divider{width:72%;height:2px;background:var(--border2);flex-shrink:0;}
+
+  /* ── Controls ── */
+  #controls{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;}
+  #msg{flex:1;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);
+    min-width:120px;padding:8px 10px;line-height:1.5;
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+  .btn{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+    padding:10px 16px;border-radius:8px;border:1px solid var(--border2);
+    background:transparent;color:var(--text);cursor:pointer;
+    transition:background .15s;touch-action:manipulation;
+    white-space:nowrap;}
+  .btn:active:not(:disabled){background:var(--surface2);}
+  @media(hover:hover){.btn:hover:not(:disabled){background:var(--surface2);}}
+  .btn:disabled{opacity:0.3;cursor:default;}
+  .btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:800;}
+  .btn.primary:active{background:#44ffaa;}
+  @media(hover:hover){.btn.primary:hover{background:#44ffaa;}}
+
+  /* ── End overlay ── */
+  #end-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);
+    z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+  #end-overlay.show{display:flex;}
+  #end-card{background:var(--surface);border:1px solid var(--accent);
+    border-radius:16px;padding:32px 36px;text-align:center;
+    max-width:340px;width:88%;animation:popIn .25s ease;}
+  @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .winner-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;
+    color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
+  #end-card h2{font-size:28px;font-weight:800;color:var(--accent);margin-bottom:6px;}
+  .pts{font-size:13px;color:var(--text2);margin-bottom:24px;font-family:'DM Mono',monospace;}
+
+  /* ═══════════════════════════════════════
+     MOBILE  ≤ 600px
+  ═══════════════════════════════════════ */
+  @media(max-width:600px){
+    :root{
+      --tile-w:44px;
+      --tile-h:88px;
+      --pip-sz:28px;
+    }
+    #app{padding:8px;gap:6px;}
+    header h1{font-size:17px;}
+    header span{display:none;} /* hide dgbot.xyz on small screens */
+
+    /* 2×2 scoreboard on very small screens */
+    #scoreboard{grid-template-columns:repeat(2,1fr);}
+    .score-val{font-size:18px;}
+    .score-name{font-size:8px;}
+    .score-bones{font-size:8px;}
+
+    #board-area{padding:8px;}
+    #hand-area{padding:10px;}
+    #hand{gap:6px;}
+
+    /* Controls stack vertically */
+    #controls{flex-direction:column;gap:6px;}
+    #msg{min-width:unset;font-size:11px;}
+    .btn{width:100%;text-align:center;padding:12px;}
+
+    #end-card{padding:24px 20px;}
+    #end-card h2{font-size:24px;}
+  }
+
+  /* ═══════════════════════════════════════
+     TINY  ≤ 380px  (iPhone SE etc.)
+  ═══════════════════════════════════════ */
+  @media(max-width:380px){
+    :root{
+      --tile-w:38px;
+      --tile-h:76px;
+      --pip-sz:22px;
+    }
+    header h1{font-size:15px;}
+    .score-val{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1>Caribbean Dominoes</h1><span>dgbot.xyz</span></header>
+  <div id="scoreboard"></div>
+  <div id="board-area">
+    <div id="board-topbar">
+      <span id="board-label">Board</span>
+      <span id="ends-hint"></span>
+    </div>
+    <div id="board-svg-wrap"><svg id="board-svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div id="boneyard-info">Boneyard: 0</div>
+  </div>
+  <div id="hand-area">
+    <div id="hand-label">Your hand — tap a tile, then tap a glowing end on the board</div>
+    <div id="hand"></div>
+  </div>
+  <div id="controls">
+    <div id="msg">Dealing…</div>
+    <button class="btn" id="btn-pass" disabled onclick="handlePass()">Draw / Pass</button>
+    <button class="btn primary" onclick="newGame()">New Game</button>
+  </div>
+</div>
+<div id="end-overlay">
+  <div id="end-card">
+    <div class="winner-label">Round over</div>
+    <h2 id="end-title"></h2>
+    <div class="pts" id="end-pts"></div>
+    <button class="btn primary" style="width:100%" onclick="newGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// PIP POSITIONS  (viewBox 0 0 40 40, pip radius 5)
+// PIPS      = used when half-box is portrait or square (tall/equal)
+//             6 = two vertical columns of 3
+// PIPS_LAND = used when half-box is in a landscape tile
+//             6 = two horizontal rows of 3 (rotate 90°)
+// ═══════════════════════════════════════════════════════════════════
+const PIPS = {
+  0:[],
+  1:[[20,20]],
+  2:[[11,11],[29,29]],
+  3:[[11,11],[20,20],[29,29]],
+  4:[[11,11],[29,11],[11,29],[29,29]],
+  5:[[11,11],[29,11],[20,20],[11,29],[29,29]],
+  6:[[11,9],[11,20],[11,31],[29,9],[29,20],[29,31]]
+};
+// For landscape half-boxes: 6 becomes two rows of 3 (top row y=11, bottom row y=29)
+const PIPS_LAND = Object.assign({}, PIPS, {
+  6:[[9,11],[20,11],[31,11],[9,29],[20,29],[31,29]]
+});
+
+// Tile dimensions (SVG units)
+// Regular tile on chain: 50 wide × 100 tall (landscape = rotated 90° → 100×50)
+// Double tile on chain: 50 wide × 100 tall (stays portrait)
+const TW=50, TH=100; // portrait tile: width=50, height=100
+// Gap between tiles
+const GAP=4;
+// Board padding
+const PAD=24;
+
+const NS='http://www.w3.org/2000/svg';
+
+// ═══════════════════════════════════════════════════════════════════
+// SVG HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function svgEl(tag,attrs){
+  const el=document.createElementNS(NS,tag);
+  for(const[k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+  return el;
+}
+
+// Draw pips centred in a box (ox,oy,boxW,boxH).
+// landscape=true → use PIPS_LAND (6 renders as two rows of 3)
+function drawPips(g, n, ox, oy, boxW, boxH, landscape){
+  const table = landscape ? PIPS_LAND : PIPS;
+  const s = Math.min(boxW, boxH) / 40;
+  const cx = ox + boxW/2;
+  const cy = oy + boxH/2;
+  const grp = svgEl('g', {transform:`translate(${cx},${cy})`});
+  (table[n]||[]).forEach(([px,py])=>{
+    const c = svgEl('circle',{
+      cx:(px-20)*s, cy:(py-20)*s,
+      r:5*s, fill:'#e8f5ee'
+    });
+    grp.appendChild(c);
+  });
+  g.appendChild(grp);
+}
+
+// Draw one domino tile at (x,y).
+// dbl=true  → portrait  TW×TH  (divider horizontal at mid-height)
+// dbl=false → landscape TH×TW  (divider vertical   at mid-width)
+function drawTile(g, a, b, x, y, dbl, isEndTile, canPlay, endSide){
+  const w=dbl?TW:TH;
+  const h=dbl?TH:TW;
+
+  const tile=svgEl('g',{});
+
+  // Glow ring for playable ends
+  if(isEndTile&&canPlay){
+    const glow=svgEl('rect',{
+      x:x-5,y:y-5,width:w+10,height:h+10,
+      rx:12,ry:12,fill:'none',
+      stroke:'#2dff8c','stroke-width':'2.5',opacity:'0.7'
+    });
+    glow.style.animation='boardPulse 1.5s ease-in-out infinite';
+    tile.appendChild(glow);
+  }
+
+  // Body
+  const body=svgEl('rect',{
+    x,y,width:w,height:h,rx:8,ry:8,
+    fill: isEndTile&&canPlay?'#172e1e':'#1e2820',
+    stroke: isEndTile&&canPlay?'#2dff8c':'rgba(45,255,140,0.3)',
+    'stroke-width': isEndTile&&canPlay?'2':'1.5'
+  });
+  tile.appendChild(body);
+
+  if(dbl){
+    // Portrait: divider is a horizontal line at vertical midpoint
+    const midY=y+TH/2;
+    const divLine=svgEl('line',{
+      x1:x+8,y1:midY,x2:x+TW-8,y2:midY,
+      stroke:'rgba(45,255,140,0.45)','stroke-width':'1.5'
+    });
+    tile.appendChild(divLine);
+    // Top half = a, bottom half = b — portrait halves, no landscape flag
+    drawPips(tile,a, x,y,       TW, TH/2, false);
+    drawPips(tile,b, x,y+TH/2,  TW, TH/2, false);
+  } else {
+    // Landscape: divider is a vertical line at horizontal midpoint
+    const midX=x+TH/2;
+    const divLine=svgEl('line',{
+      x1:midX,y1:y+7,x2:midX,y2:y+TW-7,
+      stroke:'rgba(45,255,140,0.45)','stroke-width':'1.5'
+    });
+    tile.appendChild(divLine);
+    // Left half = a, right half = b — landscape halves, pass landscape=true
+    drawPips(tile,a, x,       y, TH/2, TW, true);
+    drawPips(tile,b, x+TH/2,  y, TH/2, TW, true);
+  }
+
+  // Invisible clickable hit area for end tiles
+  if(isEndTile&&canPlay){
+    const hit=svgEl('rect',{
+      x,y,width:w,height:h,rx:8,ry:8,
+      fill:'transparent',cursor:'pointer'
+    });
+    hit.addEventListener('click',()=>handleEndTileClick(endSide));
+    hit.addEventListener('mouseenter',()=>body.setAttribute('fill','#1e3828'));
+    hit.addEventListener('mouseleave',()=>body.setAttribute('fill','#172e1e'));
+    tile.appendChild(hit);
+  }
+
+  g.appendChild(tile);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════════════════
+const PLAYERS=['You','North','East','West'];
+let state;
+
+function allDominoes(){
+  const d=[];
+  for(let i=0;i<=6;i++) for(let j=i;j<=6;j++) d.push([i,j]);
+  return d;
+}
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function newGame(){
+  document.getElementById('end-overlay').classList.remove('show');
+  const deck=shuffle(allDominoes());
+  const prev=(state&&state.totalScores)||[0,0,0,0];
+  state={
+    hands:[deck.slice(0,7),deck.slice(7,14),deck.slice(14,21),deck.slice(21,28)],
+    boneyard:deck.slice(28),
+    chain:[],leftEnd:null,rightEnd:null,
+    turn:0,totalScores:prev,
+    selected:null,msg:'Finding the highest double…',passed:0,gameOver:false
+  };
+  let fp=-1,ft=null;
+  for(let d=6;d>=0;d--){
+    for(let p=0;p<4;p++){
+      const i=state.hands[p].findIndex(t=>t[0]===d&&t[1]===d);
+      if(i>=0){fp=p;ft=[d,d];break;}
+    }
+    if(ft)break;
+  }
+  if(!ft){
+    let best=-1;
+    for(let p=0;p<4;p++) for(const t of state.hands[p]){
+      if(t[0]+t[1]>best){best=t[0]+t[1];fp=p;ft=[t[0],t[1]];}
+    }
+  }
+  const oi=state.hands[fp].findIndex(t=>t[0]===ft[0]&&t[1]===ft[1]);
+  state.hands[fp].splice(oi,1);
+  state.chain.push({a:ft[0],b:ft[1]});
+  state.leftEnd=ft[0];state.rightEnd=ft[1];
+  state.turn=(fp+1)%4;
+  state.msg=`${PLAYERS[fp]} opened with [${ft[0]}|${ft[1]}].${state.turn===0?' Your turn!':''}`;
+  if(state.hands[fp].length===0){endRound(fp);return;}
+  render();
+  if(state.turn!==0)setTimeout(aiTurns,900);
+}
+
+function canPlay(hand,le,re){
+  if(le===null)return hand.map((_,i)=>i);
+  return hand.reduce((a,t,i)=>{
+    if(t[0]===le||t[1]===le||t[0]===re||t[1]===re)a.push(i);
+    return a;
+  },[]);
+}
+function tileMatchesEnd(t,v){return t[0]===v||t[1]===v;}
+function isDouble(t){return t[0]===t[1];}
+// chain entries are {a,b} — check if double
+function chainDbl(c){return c.a===c.b;}
+
+function playTile(player,tileIdx,end){
+  const t=state.hands[player][tileIdx];
+  if(state.chain.length===0){
+    state.chain.push({a:t[0],b:t[1]});
+    state.leftEnd=t[0];state.rightEnd=t[1];
+  } else if(end==='left'){
+    const le=state.leftEnd;
+    if(t[1]===le) state.chain.unshift({a:t[0],b:t[1]});
+    else           state.chain.unshift({a:t[1],b:t[0]});
+    state.leftEnd=state.chain[0].a;
+  } else {
+    const re=state.rightEnd;
+    if(t[0]===re) state.chain.push({a:t[0],b:t[1]});
+    else           state.chain.push({a:t[1],b:t[0]});
+    state.rightEnd=state.chain[state.chain.length-1].b;
+  }
+  state.hands[player].splice(tileIdx,1);
+  state.passed=0;
+  if(state.hands[player].length===0)endRound(player);
+}
+
+function endRound(winner){
+  state.gameOver=true;
+  let total=0;
+  for(let p=0;p<4;p++) if(p!==winner) total+=state.hands[p].reduce((s,t)=>s+t[0]+t[1],0);
+  state.totalScores[winner]+=total;
+  render();
+  document.getElementById('end-title').textContent=winner===0?'You Win! 🎉':`${PLAYERS[winner]} Wins`;
+  document.getElementById('end-pts').textContent=`+${total} pts · Total: ${state.totalScores[winner]}`;
+  document.getElementById('end-overlay').classList.add('show');
+}
+
+function blockedGame(){
+  state.gameOver=true;
+  const totals=state.hands.map(h=>h.reduce((s,t)=>s+t[0]+t[1],0));
+  const min=Math.min(...totals);
+  const winner=totals.indexOf(min);
+  render();
+  document.getElementById('end-title').textContent=winner===0?'You Win! (Blocked)':`${PLAYERS[winner]} Wins`;
+  document.getElementById('end-pts').textContent=`Blocked · Lowest hand: ${min} pips`;
+  document.getElementById('end-overlay').classList.add('show');
+}
+
+function aiTurns(){
+  if(state.gameOver)return;
+  const events=[];
+  while(state.turn!==0&&!state.gameOver){
+    const p=state.turn;
+    const playable=canPlay(state.hands[p],state.leftEnd,state.rightEnd);
+    if(playable.length>0){
+      const idx=playable[Math.floor(Math.random()*playable.length)];
+      const t=state.hands[p][idx];
+      const canL=tileMatchesEnd(t,state.leftEnd),canR=tileMatchesEnd(t,state.rightEnd);
+      let end=canR?'right':'left';
+      if(canL&&canR)end=Math.random()<.5?'left':'right';
+      playTile(p,idx,end);
+      if(state.gameOver)break;
+    } else if(state.boneyard.length>0){
+      state.hands[p].push(state.boneyard.pop());
+      events.push(`${PLAYERS[p]} drew a tile.`);
+    } else {
+      state.passed++;
+      events.push(`${PLAYERS[p]} passed.`);
+      if(state.passed>=4){blockedGame();return;}
+    }
+    state.turn=(state.turn+1)%4;
+  }
+  if(!state.gameOver){
+    const suffix=events.length>0?' — '+events.join(' '):'';
+    state.msg='Your turn — click a tile from your hand.'+suffix;
+    render();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PLAYER INPUT
+// ═══════════════════════════════════════════════════════════════════
+function handleHandClick(idx){
+  if(state.turn!==0||state.gameOver)return;
+  if(state.selected===idx){state.selected=null;state.msg='Selection cleared.';render();return;}
+  const t=state.hands[0][idx];
+  const le=state.leftEnd,re=state.rightEnd;
+  if(le===null){
+    state.selected=idx;
+    state.msg=`[${t[0]}|${t[1]}] selected — click either glowing end on the board to place it.`;
+    render();return;
+  }
+  const canL=tileMatchesEnd(t,le),canR=tileMatchesEnd(t,re);
+  if(!canL&&!canR){
+    state.msg=`[${t[0]}|${t[1]}] doesn't match either end (${le} or ${re}). Pick another tile.`;
+    render();return;
+  }
+  state.selected=idx;
+  if(canL&&canR)      state.msg=`[${t[0]}|${t[1]}] fits both ends — click the glowing end you want.`;
+  else if(canL)       state.msg=`[${t[0]}|${t[1]}] fits the left end (${le}) — click that glowing tile.`;
+  else                state.msg=`[${t[0]}|${t[1]}] fits the right end (${re}) — click that glowing tile.`;
+  render();
+}
+
+function handleEndTileClick(end){
+  if(state.turn!==0||state.gameOver)return;
+  if(state.selected===null){state.msg='Select a tile from your hand first.';render();return;}
+  const idx=state.selected;
+  const t=state.hands[0][idx];
+  const le=state.leftEnd,re=state.rightEnd;
+  if(le===null){
+    playTile(0,idx,end);state.selected=null;state.msg='Tile played!';
+  } else {
+    const endVal=end==='left'?le:re;
+    if(!tileMatchesEnd(t,endVal)){
+      const otherVal=end==='left'?re:le;
+      if(tileMatchesEnd(t,otherVal)){
+        state.msg=`[${t[0]}|${t[1]}] doesn't fit that end (${endVal}) — try the other glowing end (${otherVal}).`;
+      } else {
+        state.msg=`[${t[0]}|${t[1]}] doesn't match either end. Pick a different tile.`;
+      }
+      render();return;
+    }
+    playTile(0,idx,end);state.selected=null;state.msg='Tile played!';
+  }
+  if(!state.gameOver){
+    state.turn=(state.turn+1)%4;
+    render();
+    if(state.turn!==0)setTimeout(aiTurns,750);
+  }
+}
+
+function handlePass(){
+  if(state.turn!==0||state.gameOver)return;
+  const playable=canPlay(state.hands[0],state.leftEnd,state.rightEnd);
+  if(playable.length>0){state.msg='You have playable tiles — you must play one!';render();return;}
+  if(state.boneyard.length>0){
+    state.hands[0].push(state.boneyard.pop());
+    state.msg='Drew a tile from the boneyard.';
+  } else {
+    state.passed++;state.msg='No tiles left — passed.';
+    if(state.passed>=4){blockedGame();return;}
+  }
+  state.turn=1;render();setTimeout(aiTurns,750);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// BOARD RENDERING — SNAKE LAYOUT
+//
+// Layout (matching real Caribbean domino play):
+//   Centre row: up to MAX_ROW tiles, left-to-right
+//   Once centre fills: left arm grows downward, right arm grows upward
+//   Each tile knows its segment: 'centre' | 'left-arm' | 'right-arm'
+//
+// Tile sizes:
+//   Horizontal (centre row, non-double): TH wide × TW tall
+//   Vertical (arm tiles, non-double):    TW wide × TH tall
+//   Double always portrait:              TW wide × TH tall
+//
+// All tiles in the same segment share a centre axis.
+// ═══════════════════════════════════════════════════════════════════
+
+// drawTileAt: draw a domino at (x,y) with explicit orientation
+// orient: 'h' = horizontal landscape, 'v' = vertical portrait
+// (doubles always use 'v' regardless)
+function drawTileAt(g, a, b, x, y, orient, isEndTile, canPlay, endSide){
+  const horiz = orient==='h';
+  const w = horiz ? TH : TW;
+  const h = horiz ? TW : TH;
+  const tile = svgEl('g',{});
+
+  if(isEndTile&&canPlay){
+    const glow=svgEl('rect',{x:x-5,y:y-5,width:w+10,height:h+10,
+      rx:12,ry:12,fill:'none',stroke:'#2dff8c','stroke-width':'2.5',opacity:'0.7'});
+    glow.style.animation='boardPulse 1.5s ease-in-out infinite';
+    tile.appendChild(glow);
+  }
+  const body=svgEl('rect',{x,y,width:w,height:h,rx:8,ry:8,
+    fill:isEndTile&&canPlay?'#172e1e':'#1e2820',
+    stroke:isEndTile&&canPlay?'#2dff8c':'rgba(45,255,140,0.3)',
+    'stroke-width':isEndTile&&canPlay?'2':'1.5'});
+  tile.appendChild(body);
+
+  if(horiz){
+    // Horizontal: vertical divider at midpoint, left=a right=b
+    const midX=x+TH/2;
+    tile.appendChild(svgEl('line',{x1:midX,y1:y+7,x2:midX,y2:y+TW-7,
+      stroke:'rgba(45,255,140,0.45)','stroke-width':'1.5'}));
+    drawPips(tile,a, x,y,       TH/2,TW, true);
+    drawPips(tile,b, x+TH/2,y,  TH/2,TW, true);
+  } else {
+    // Vertical: horizontal divider at midpoint, top=a bottom=b
+    const midY=y+TH/2;
+    tile.appendChild(svgEl('line',{x1:x+8,y1:midY,x2:x+TW-8,y2:midY,
+      stroke:'rgba(45,255,140,0.45)','stroke-width':'1.5'}));
+    drawPips(tile,a, x,y,      TW,TH/2, false);
+    drawPips(tile,b, x,y+TH/2, TW,TH/2, false);
+  }
+
+  if(isEndTile&&canPlay){
+    const hit=svgEl('rect',{x,y,width:w,height:h,rx:8,ry:8,
+      fill:'transparent',cursor:'pointer'});
+    hit.addEventListener('click',()=>handleEndTileClick(endSide));
+    hit.addEventListener('mouseenter',()=>body.setAttribute('fill','#1e3828'));
+    hit.addEventListener('mouseleave',()=>body.setAttribute('fill','#172e1e'));
+    tile.appendChild(hit);
+  }
+  g.appendChild(tile);
+}
+
+const MAX_ROW = 9; // tiles in centre row before arms start
+
+function renderBoard(){
+  const svg=document.getElementById('board-svg');
+  const wrap=document.getElementById('board-svg-wrap');
+  svg.innerHTML='';
+
+  const defs=svgEl('defs',{});
+  const styleEl=document.createElementNS(NS,'style');
+  styleEl.textContent='@keyframes boardPulse{0%,100%{opacity:.45}50%{opacity:1}}';
+  defs.appendChild(styleEl);
+  svg.appendChild(defs);
+
+  const wrapW=wrap.clientWidth||640;
+
+  if(state.chain.length===0){
+    const h=140;
+    svg.setAttribute('viewBox',`0 0 ${wrapW} ${h}`);
+    svg.style.height=h+'px';
+    const t=svgEl('text',{x:wrapW/2,y:h/2,'text-anchor':'middle',
+      'dominant-baseline':'middle',fill:'#4a6655',
+      'font-family':'DM Mono,monospace','font-size':'14'});
+    t.textContent='Waiting for first tile…';
+    svg.appendChild(t);
+    return;
+  }
+
+  const chain=state.chain;
+  const n=chain.length;
+
+  // ── Which ends can the selected tile play on? ──────────────────
+  let selCanL=false,selCanR=false;
+  if(state.selected!==null&&state.turn===0&&!state.gameOver){
+    if(state.leftEnd===null){selCanL=true;selCanR=true;}
+    else{
+      const st=state.hands[0][state.selected];
+      selCanL=tileMatchesEnd(st,state.leftEnd);
+      selCanR=tileMatchesEnd(st,state.rightEnd);
+    }
+  }
+
+  // ── Partition chain into segments ─────────────────────────────
+  // centre: tiles 0 … min(n-1, MAX_ROW-1)  (indices from left)
+  // right-arm: tiles MAX_ROW … end (grow upward from right end of centre)
+  // left-arm:  when left side also needs spill — but per your drawing
+  //            the LEFT end turns DOWN and the RIGHT end turns UP.
+  //            We handle both arms symmetrically.
+
+  // How many tiles are in each region:
+  // Centre holds MAX_ROW. Extra tiles overflow into arms.
+  // Rule: if the tile that would be FIRST in an arm is a double,
+  // pull it back into the centre row so doubles never appear in arms.
+
+  let centreChain, leftArm, rightArm;
+  if(n<=MAX_ROW){
+    centreChain=chain.slice();
+    leftArm=[];
+    rightArm=[];
+  } else {
+    const leftExtra=Math.floor((n-MAX_ROW)/2);
+
+    // Raw split
+    let lExtra=leftExtra;
+    let rExtra=n-MAX_ROW-lExtra;
+
+    // If the first tile going into the right arm is a double, keep it in centre
+    while(rExtra>0 && chainDbl(chain[lExtra+MAX_ROW])){
+      rExtra--; // shrink right arm — double stays in centre
+      // To keep centre at MAX_ROW we need to push one from left arm to centre too
+      if(lExtra>0) lExtra--;
+    }
+    // If the first tile going into the left arm is a double, keep it in centre
+    while(lExtra>0 && chainDbl(chain[lExtra-1])){
+      lExtra--;
+    }
+
+    leftArm  = chain.slice(0, lExtra).reverse(); // index 0 = closest to centre
+    centreChain = chain.slice(lExtra, lExtra+MAX_ROW + (n-MAX_ROW-lExtra-rExtra));
+    rightArm = chain.slice(lExtra+centreChain.length); // index 0 = closest to centre
+  }
+
+  // ── Compute layout dimensions ─────────────────────────────────
+  // tileW(c) = width a chain tile occupies in horizontal layout
+  function tileW(c){ return chainDbl(c)?TW:TH; }
+
+  const centreRowW = centreChain.reduce((s,c)=>s+tileW(c)+GAP,0)-GAP;
+
+  // arm tile heights (doubles lay flat = TW tall, regulars = TH tall)
+  function armTileH(c){ return chainDbl(c)?TW:TH; }
+  function armTileW(c){ return chainDbl(c)?TH:TW; }
+  function armOrient(c){ return chainDbl(c)?'h':'v'; }
+
+  const leftArmHcalc  = leftArm.reduce((s,c)=>s+armTileH(c),0);
+  const rightArmHcalc = rightArm.reduce((s,c)=>s+armTileH(c),0);
+
+  const armAbove = Math.max(leftArmHcalc, rightArmHcalc);
+  const armBelow = 0;
+
+  const centreY0 = PAD + armAbove;
+  const centreAxisY = centreY0 + TH/2;
+  const centreX0 = PAD;
+
+  const contentW = centreRowW + PAD*2;
+  const contentH = PAD + armAbove + TH + PAD;
+
+  // Scale to fit
+  const scale=Math.min(1,wrapW/contentW);
+  svg.setAttribute('viewBox',`0 0 ${contentW} ${contentH}`);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  svg.style.height=Math.max(110,Math.round(contentH*scale))+'px';
+
+  // ── Draw centre row ───────────────────────────────────────────
+  let cx=centreX0;
+  centreChain.forEach((c,i)=>{
+    const dbl=chainDbl(c);
+    const orient=dbl?'v':'h';
+    const w=dbl?TW:TH;
+    const h=dbl?TH:TW;
+    const tx=cx;
+    const ty=centreAxisY-h/2;
+
+    // Is this tile an end?
+    const isLeftEnd  = (leftArm.length===0 && i===0);
+    const isRightEnd = (rightArm.length===0 && i===centreChain.length-1);
+    const isSingle   = (n===1);
+
+    if(isSingle){
+      drawTileAt(svg,c.a,c.b,tx,ty,orient,true,selCanL||selCanR,'left');
+    } else if(isLeftEnd){
+      drawTileAt(svg,c.a,c.b,tx,ty,orient,true,selCanL,'left');
+    } else if(isRightEnd){
+      drawTileAt(svg,c.a,c.b,tx,ty,orient,true,selCanR,'right');
+    } else {
+      drawTileAt(svg,c.a,c.b,tx,ty,orient,false,false,null);
+    }
+    cx+=w+GAP;
+  });
+
+  // ── Draw right arm (grows UPWARD) ─────────────────────────────
+  if(rightArm.length>0){
+    const armColX = centreX0 + centreRowW - TW;
+    const lastCentreH = chainDbl(centreChain[centreChain.length-1])?TH:TW;
+    let armY = centreAxisY - lastCentreH/2; // top of last centre tile
+    rightArm.forEach((c,i)=>{
+      const isEnd = i===rightArm.length-1;
+      const th = armTileH(c);
+      const tx = chainDbl(c) ? armColX-(TH-TW)/2 : armColX;
+      armY -= th;
+      drawTileAt(svg,c.b,c.a,tx,armY,armOrient(c),isEnd,isEnd&&selCanR,'right');
+    });
+  }
+
+  // ── Draw left arm (grows UPWARD from left end) ────────────────
+  if(leftArm.length>0){
+    const armColX = centreX0;
+    // Start flush with top edge of first centre tile
+    const firstCentreH = chainDbl(centreChain[0])?TH:TW;
+    let armY = centreAxisY - firstCentreH/2; // top of first centre tile
+    leftArm.forEach((c,i)=>{
+      const isEnd = i===leftArm.length-1;
+      const th = armTileH(c);
+      const tx = chainDbl(c) ? armColX-(TH-TW)/2 : armColX;
+      armY -= th;
+      // For left arm going up: c.b is connecting face (nearest chain = bottom)
+      // Draw top=c.a, bottom=c.b
+      drawTileAt(svg,c.a,c.b,tx,armY,armOrient(c),isEnd,isEnd&&selCanL,'left');
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HAND RENDERING  (DOM tiles with SVG pips)
+// ═══════════════════════════════════════════════════════════════════
+function makePipSVG(n,boxW,boxH){
+  const svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('width',boxW);
+  svg.setAttribute('height',boxH);
+  svg.setAttribute('viewBox','0 0 40 40');
+  (PIPS[n]||[]).forEach(([px,py])=>{
+    const c=document.createElementNS(NS,'circle');
+    c.setAttribute('cx',px);c.setAttribute('cy',py);
+    c.setAttribute('r','5');c.setAttribute('fill','#e8f5ee');
+    svg.appendChild(c);
+  });
+  return svg;
+}
+
+function getPipSize(){
+  // Read --pip-sz CSS variable so pip size scales with breakpoint
+  const val=getComputedStyle(document.documentElement).getPropertyValue('--pip-sz').trim();
+  return parseInt(val)||36;
+}
+
+function createHandTile(a,b,selected,unplayable){
+  const el=document.createElement('div');
+  let cls='domino';
+  if(selected)cls+=' selected';
+  if(unplayable)cls+=' unplayable';
+  el.className=cls;
+  el.title=`[${a}|${b}]`;
+
+  const h1=document.createElement('div');h1.className='half';
+  const div=document.createElement('div');div.className='divider';
+  const h2=document.createElement('div');h2.className='half';
+
+  const ps=getPipSize();
+  h1.appendChild(makePipSVG(a,ps,ps));
+  h2.appendChild(makePipSVG(b,ps,ps));
+  el.appendChild(h1);el.appendChild(div);el.appendChild(h2);
+  return el;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════════
+function render(){
+  // Scoreboard
+  const sb=document.getElementById('scoreboard');
+  sb.innerHTML='';
+  PLAYERS.forEach((n,i)=>{
+    const c=document.createElement('div');
+    c.className='score-card'+(state.turn===i&&!state.gameOver?' active':'');
+    const boneCount=state.hands[i].length;
+    const bonesLine=i===0
+      ? `<div class="score-bones">${boneCount} in hand</div>`
+      : `<div class="score-bones">${'▪'.repeat(Math.min(boneCount,7))}${boneCount>7?'…':''} ${boneCount}</div>`;
+    c.innerHTML=`<div class="score-name">${n}</div><div class="score-val">${state.totalScores[i]}</div>${bonesLine}<div class="score-turn">${state.turn===i&&!state.gameOver?'▶ TURN':''}</div>`;
+    sb.appendChild(c);
+  });
+
+  // Ends hint
+  const hint=document.getElementById('ends-hint');
+  hint.textContent=state.chain.length>0?`left: ${state.leftEnd}  ·  right: ${state.rightEnd}`:'';
+
+  // SVG board
+  renderBoard();
+
+  document.getElementById('boneyard-info').textContent=`Boneyard: ${state.boneyard.length}`;
+
+  // Hand
+  const handEl=document.getElementById('hand');
+  handEl.innerHTML='';
+  const playable=canPlay(state.hands[0],state.leftEnd,state.rightEnd);
+  const playableSet=new Set(playable);
+  state.hands[0].forEach((t,i)=>{
+    const unplay=state.leftEnd!==null&&!playableSet.has(i);
+    const el=createHandTile(t[0],t[1],state.selected===i,unplay);
+    if(!unplay) el.onclick=()=>handleHandClick(i);
+    handEl.appendChild(el);
+  });
+
+  document.getElementById('msg').textContent=state.msg;
+
+  const passBtn=document.getElementById('btn-pass');
+  passBtn.disabled=state.turn!==0||state.gameOver||playable.length>0;
+  passBtn.textContent=state.boneyard.length>0?'Draw Tile':'Pass';
+}
+
+// Re-render board when container resizes (for zoom accuracy)
+const resizeObserver=new ResizeObserver(()=>{ if(state&&state.chain) renderBoard(); });
+resizeObserver.observe(document.getElementById('board-svg-wrap'));
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+state={totalScores:[0,0,0,0]};
+newGame();
+</script>
+</body>
+</html>
