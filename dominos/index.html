@@ -516,9 +516,16 @@ function handleHandClick(idx){
   const t=state.hands[0][idx];
   const le=state.leftEnd,re=state.rightEnd;
   if(le===null){
-    state.selected=idx;
-    state.msg=`[${t[0]}|${t[1]}] selected — click either glowing end on the board to place it.`;
-    render();return;
+    // Board is empty — play directly, no second click needed
+    playTile(0,idx,'left');
+    state.selected=null;
+    state.msg='Tile played!';
+    if(!state.gameOver){
+      state.turn=1;
+      render();
+      setTimeout(aiTurns,750);
+    }
+    return;
   }
   const canL=tileMatchesEnd(t,le),canR=tileMatchesEnd(t,re);
   if(!canL&&!canR){
