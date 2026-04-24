@@ -185,7 +185,7 @@
   <h1>Caribbean Dominoes</h1>
   <div style="display:flex;align-items:center;gap:10px">
    <span>dgbot.xyz</span>
-   <button id="theme-toggle" onclick="toggleTheme()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;">☀️ Light</button>
+   <button id="theme-toggle" onclick="toggleTheme()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;">🌙 Dark</button>
   </div>
  </header>
   <div id="scoreboard"></div>
@@ -884,11 +884,11 @@ function toggleTheme(){
   const btn=document.getElementById('theme-toggle');
   if(root.classList.contains('light')){
     root.classList.remove('light');
-    btn.textContent='☀️ Light';
+    btn.textContent='🌙 Dark';
     localStorage.setItem('domino-theme','dark');
   } else {
     root.classList.add('light');
-    btn.textContent='🌙 Dark';
+    btn.textContent='☀️ Light';
     localStorage.setItem('domino-theme','light');
   }
 }
@@ -897,7 +897,7 @@ if(localStorage.getItem('domino-theme')==='light'){
   document.documentElement.classList.add('light');
   setTimeout(()=>{
     const btn=document.getElementById('theme-toggle');
-    if(btn) btn.textContent='🌙 Dark';
+    if(btn) btn.textContent='☀️ Light';
   },0);
 }
 
