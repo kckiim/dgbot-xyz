@@ -12,8 +12,19 @@
     --accent:#2dff8c; --accent-dim:#1d9e57; --accent-dark:#0a3d20;
     --text:#e8f5ee; --text2:#7fa890; --text3:#4a6655;
     --tile-bg:#1e2820; --tile-border:rgba(45,255,140,0.3); --pip:#e8f5ee;
-    /* Tile size tokens — override on mobile */
     --tile-w:52px; --tile-h:104px; --pip-sz:36px;
+  }
+  /* Light mode */
+  :root.light {
+    --bg:#f0f4f2; --surface:#ffffff; --surface2:#e8f0ec;
+    --border:rgba(0,150,70,0.2); --border2:rgba(0,150,70,0.4);
+    --accent:#00963f; --accent-dim:#007a33; --accent-dark:#d0f0df;
+    --text:#0d1f15; --text2:#3a6650; --text3:#7aaa90;
+    --tile-bg:#ffffff; --tile-border:rgba(0,150,70,0.35); --pip:#0d1f15;
+  }
+  :root.light body::before{
+    background-image:linear-gradient(rgba(0,150,70,0.04)1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,150,70,0.04)1px,transparent 1px);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;}
@@ -170,7 +181,13 @@
 </head>
 <body>
 <div id="app">
-  <header><h1>Caribbean Dominoes</h1><span>dgbot.xyz</span></header>
+  <header>
+  <h1>Caribbean Dominoes</h1>
+  <div style="display:flex;align-items:center;gap:10px">
+   <span>dgbot.xyz</span>
+   <button id="theme-toggle" onclick="toggleTheme()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;">☀️ Light</button>
+  </div>
+ </header>
   <div id="scoreboard"></div>
   <div id="board-area">
     <div id="board-topbar">
@@ -252,7 +269,7 @@ function drawPips(g, n, ox, oy, boxW, boxH, landscape){
   (table[n]||[]).forEach(([px,py])=>{
     const c = svgEl('circle',{
       cx:(px-20)*s, cy:(py-20)*s,
-      r:5*s, fill:'#e8f5ee'
+      r:5*s, fill:getComputedStyle(document.documentElement).getPropertyValue('--pip').trim()||'#e8f5ee'
     });
     grp.appendChild(c);
   });
@@ -777,7 +794,7 @@ function makePipSVG(n,boxW,boxH){
   (PIPS[n]||[]).forEach(([px,py])=>{
     const c=document.createElementNS(NS,'circle');
     c.setAttribute('cx',px);c.setAttribute('cy',py);
-    c.setAttribute('r','5');c.setAttribute('fill','#e8f5ee');
+    c.setAttribute('r','5');c.setAttribute('fill',getComputedStyle(document.documentElement).getPropertyValue('--pip').trim()||'#e8f5ee');
     svg.appendChild(c);
   });
   return svg;
@@ -861,6 +878,29 @@ resizeObserver.observe(document.getElementById('board-svg-wrap'));
 // ═══════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════
+// Theme toggle
+function toggleTheme(){
+  const root=document.documentElement;
+  const btn=document.getElementById('theme-toggle');
+  if(root.classList.contains('light')){
+    root.classList.remove('light');
+    btn.textContent='☀️ Light';
+    localStorage.setItem('domino-theme','dark');
+  } else {
+    root.classList.add('light');
+    btn.textContent='🌙 Dark';
+    localStorage.setItem('domino-theme','light');
+  }
+}
+// Load saved theme
+if(localStorage.getItem('domino-theme')==='light'){
+  document.documentElement.classList.add('light');
+  setTimeout(()=>{
+    const btn=document.getElementById('theme-toggle');
+    if(btn) btn.textContent='🌙 Dark';
+  },0);
+}
+
 state={totalScores:[0,0,0,0]};
 newGame();
 </script>
