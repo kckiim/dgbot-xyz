@@ -544,15 +544,18 @@ function handleEndTileClick(end){
   } else {
     const endVal=end==='left'?le:re;
     if(!tileMatchesEnd(t,endVal)){
+      const otherEnd=end==='left'?'right':'left';
       const otherVal=end==='left'?re:le;
       if(tileMatchesEnd(t,otherVal)){
-        state.msg=`[${t[0]}|${t[1]}] doesn't fit that end (${endVal}) — try the other glowing end (${otherVal}).`;
+        // Auto-play to the correct end instead of forcing another click
+        playTile(0,idx,otherEnd);state.selected=null;state.msg='Tile played!';
       } else {
         state.msg=`[${t[0]}|${t[1]}] doesn't match either end. Pick a different tile.`;
+        render();return;
       }
-      render();return;
+    } else {
+      playTile(0,idx,end);state.selected=null;state.msg='Tile played!';
     }
-    playTile(0,idx,end);state.selected=null;state.msg='Tile played!';
   }
   if(!state.gameOver){
     state.turn=(state.turn+1)%4;
